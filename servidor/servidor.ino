@@ -20,7 +20,7 @@
 #include <BLE2902.h>
 
 // DEPENDÊNCIAS NATIVAS
-#include "./libs/Tacometro.hpp"
+#include "Tacometro.hpp"
 
 // ATRIBUIÇÕES PARA PINOS (DOCUMENTAR)
 #define GATILHO 34
@@ -35,15 +35,30 @@ bool deviceConnected = false;
 bool oldDeviceConnected = false;
 
 //VARIÁVEIS ESPECIFICAS DO PROTOCOLO CYCLE
-uint16_t status = 0b00000000; //recursos
+uint8_t status = 0b00000000; //recursos
 uint16_t rpm = 0;
 uint16_t rumo = 0; // 0 até 360
 
 const uint8_t TAMANHO_MAX_MSG = 50;
 
+//INSTÂNCIAÇÃO DE BIBLIOTECAS DOS SENSORES
+Tacometro *tac = new Tacometro( 2.08, 4, GATILHO, ECO );
+
 /*Gere UUID's em: https://www.uuidgenerator.net */
 #define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+
+/* usa máscara negativa (0) cujo bit alvo é marcado como um */
+void definirBit( uint8_t* alvo, uint8_t mascaraNegativa )
+{
+  *alvo |= mascaraNegativa;
+}
+
+/* usa máscara positiva (1) cujo o bit alvo é marcado como zero */
+void desdefinirBit( uint8_t* alvo, uint8_t mascaraPositiva )
+{
+  *alvo &= mascaraPositiva;
+}
 
 class MyServerCallbacks: public BLEServerCallbacks 
 {
@@ -88,18 +103,16 @@ void setup()
   BLEDevice::startAdvertising();
   Serial.println("Aguardando cliente para notifica-lo periodicamente...");
 
-  //INSTÂNCIAÇÃO DE BIBLIOTECAS DOS SENSORES
-  const Tacometro *tacometro = new Tacometro( 2.08, 4, GATILHO, ECO );
+  //VERIFICANDO O FUNCIONAMENTO DOS SENSORES:
 
-  if ( tacometro->testarSensor() == false )
+  if ( tac->getLeituraMilisegundos() != 0 )
   {
-    delete tacometro;
-    tacometro = NULL;
-    status = status | 0b00000000;
+    definirBit( &status, (uint8_t)0b00000001 );
   }
   else
   {
-    status = status | 0b00000001;
+    delete tac;
+    tac = NULL;
   }
 }
 
@@ -111,9 +124,9 @@ void loop()
         String resposta( "{" );
 
         // Verificando usabilidade
-        if ( tacometro != NULL )
+        if ( tac != NULL )
         {
-          rpm = tacometro->obterRpm();
+          rpm = tac->obterRpm();
         }
 
         // Construção da resposta

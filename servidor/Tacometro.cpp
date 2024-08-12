@@ -5,11 +5,17 @@
  * https://github.com/ErickSimoes/Ultrasonic
  ******************************************************/
 
+#if ARDUINO >= 100
+  #include <Arduino.h>
+#else
+  #include <WProgram.h>
+#endif
+
 #include <cstdint>
 #include "Tacometro.hpp"
 
 //DEPENDÊNCIAS EXTERNAS:
-#include "./externo/Ultrasonic.h"
+#include "Ultrasonic.h"
 
 #define MINUTO 60000 //ms
 
@@ -61,17 +67,17 @@ void Tacometro::obterTimestampsEntreDuasLeituras()
 
 uint16_t Tacometro::obterRpm()
 {
-  uint16_t duracaoRotacao = this->tempoFinal - this->tempoInicial;
-  return ( MINUTO / duracaoRotacao );
+  this->obterTimestampsEntreDuasLeituras();
+  uint16_t duracaoRotacao = (this->tempoFinal - this->tempoInicial);
+  if ( duracaoRotacao != 0 )
+    return ( MINUTO / duracaoRotacao );
+  else
+    return 0;
 }
 
-/* Considera que há distância x > 0 cm para teste.
- * Determina acessibilidade do recurso.
- * */
-bool Tacometro::testarSensor()
+uint16_t Tacometro::getLeituraMilisegundos()
 {
-  if ( this->ultrasonico->read( CM ) == 0 )
-    return false;
-  else return true;
+  this->obterTimestampsEntreDuasLeituras();
+  return (this->tempoFinal - this->tempoInicial);
 }
 

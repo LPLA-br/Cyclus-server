@@ -2,7 +2,7 @@
 #define TACOMETRO_HPP_INCLUDED
 
 #include <cstdint>
-#include "./externo/Ultrasonic.h"
+#include "Ultrasonic.h"
 
 class Tacometro
 {
@@ -25,7 +25,7 @@ class Tacometro
     Tacometro( uint16_t diametroPneu, int16_t distanciaPulso, uint8_t GATILHO, uint8_t ECO );
 
     uint16_t obterRpm();
-    bool testarSensor();
+    uint16_t getLeituraMilisegundos();
 };
 
 #endif // TACOMETRO_HPP_INCLUDED
