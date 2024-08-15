@@ -21,10 +21,10 @@
 
 Tacometro::Tacometro(
     uint16_t diametroPneu, int16_t distanciaPulso,
-    const uint8_t GATILHO, uint8_t ECO
+    const uint8_t gatilho, const uint8_t eco
 ): tempoInicial(0), tempoFinal(1)
 {
-  this->ultrasonico = new Ultrasonic( GATILHO, ECO );
+  this->ultrasonico = new Ultrasonic();
   this->diametroPneu = diametroPneu;
   this->distanciaPulso = distanciaPulso;
 }
@@ -34,7 +34,7 @@ void Tacometro::ler( uint16_t* variavelAlvo )
 {
   while( true )
   {
-    if( this->ultrasonico->read( CM ) <= this->distanciaPulso )
+    if( this->ultrasonico->obterDistanciaCM() <= this->distanciaPulso )
     {
       continue;
     }
@@ -49,7 +49,7 @@ void Tacometro::ler( uint16_t* variavelAlvo )
 /* encerra leitura de tempo bloqueante */
 void  Tacometro::lerFinal()
 {
-  while( this->ultrasonico->read( CM ) > this->distanciaPulso )
+  while( this->ultrasonico->obterDistanciaCM() > this->distanciaPulso )
   {
     continue;
   }
@@ -58,7 +58,7 @@ void  Tacometro::lerFinal()
 
 void Tacometro::obterTimestampsEntreDuasLeituras()
 {
-  if( this->ultrasonico->read( CM ) <= this->distanciaPulso )
+  if( this->ultrasonico->obterDistanciaCM() <= this->distanciaPulso )
   {
     this->ler( &this->tempoInicial );
     this->lerFinal();

@@ -2,7 +2,7 @@
 #define TACOMETRO_HPP_INCLUDED
 
 #include <cstdint>
-#include "Ultrasonic.h"
+#include "Ultrasonic.hpp"
 
 class Tacometro
 {
