@@ -1,31 +1,12 @@
 #ifndef TACOMETRO_HPP_INCLUDED
 #define TACOMETRO_HPP_INCLUDED
 
-#include <cstdint>
-#include "Ultrasonic.hpp"
+#define LEITOR 4
+#define MINUTO 60000
 
-class Tacometro
-{
-  private:
 
-  protected:
-    Ultrasonic* ultrasonico;
-   
-    float diametroPneu;
-    float distanciaPulso; // gatilho de leitura
-
-    uint16_t tempoInicial;
-    uint16_t tempoFinal;
-
-    void ler( uint16_t* variavelAlvo );
-    void lerFinal();
-    void obterTimestampsEntreDuasLeituras();
-
-  public:
-    Tacometro( uint16_t diametroPneu, int16_t distanciaPulso, uint8_t GATILHO, uint8_t ECO );
-
-    uint16_t obterRpm();
-    uint16_t getLeituraMilisegundos();
-};
+int medirTempoEntreDoisPulsos();
+float obterRpm( int duracaoRotacao );
+float quilometroPorHora( const int PERIMETRO_CIRCULAR_PNEU, int rpm );
 
 #endif // TACOMETRO_HPP_INCLUDED

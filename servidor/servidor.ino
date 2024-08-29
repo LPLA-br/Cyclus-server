@@ -21,11 +21,9 @@
 
 // DEPENDÊNCIAS NATIVAS
 #include "Tacometro.hpp"
-
-// ATRIBUIÇÕES PARA PINOS (DOCUMENTAR)
-#define GATILHO 34
-#define ECO 35
- 
+#include "Odometro.hpp"
+#include "Bits.hpp"
+#include "Testes.hpp"
 
 //BLUETOOTH LE
 BLEServer* servidor = NULL;
@@ -41,24 +39,9 @@ uint16_t rumo = 0; // 0 até 360
 
 const uint8_t TAMANHO_MAX_MSG = 50;
 
-//INSTÂNCIAÇÃO DE BIBLIOTECAS DOS SENSORES
-Tacometro *tac = new Tacometro( 2.08, 4, GATILHO, ECO );
-
 /*Gere UUID's em: https://www.uuidgenerator.net */
 #define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
-
-/* usa máscara negativa (0) cujo bit alvo é marcado como um */
-void definirBit( uint8_t* alvo, uint8_t mascaraNegativa )
-{
-  *alvo |= mascaraNegativa;
-}
-
-/* usa máscara positiva (1) cujo o bit alvo é marcado como zero */
-void desdefinirBit( uint8_t* alvo, uint8_t mascaraPositiva )
-{
-  *alvo &= mascaraPositiva;
-}
 
 class MyServerCallbacks: public BLEServerCallbacks 
 {
@@ -103,17 +86,10 @@ void setup()
   BLEDevice::startAdvertising();
   Serial.println("Aguardando cliente para notifica-lo periodicamente...");
 
-  //VERIFICANDO O FUNCIONAMENTO DOS SENSORES:
+  /*EXECUÇÃO DE FUNÇÕES DE TESTE PARA DEFINIÇÃO DA
+    FLAGS DE DISPONIBILIDADE DE RECURSOS MODULARES*/
+  status = 0b00000001;
 
-  if ( tac->getLeituraMilisegundos() != 0 )
-  {
-    definirBit( &status, (uint8_t)0b00000001 );
-  }
-  else
-  {
-    delete tac;
-    tac = NULL;
-  }
 }
 
 void loop() 
@@ -123,23 +99,12 @@ void loop()
 
         String resposta( "{" );
 
-        // Verificando usabilidade
-        if ( tac != NULL )
-        {
-          rpm = tac->obterRpm();
-        }
-
-        // Construção da resposta
+        // Construção da resposta BLE
         if ( 0b00000001 & status )
         {
+          rpm = obterRpm(medirTempoEntreDoisPulsos());
           resposta.concat( "\"rpm\":" );
           resposta.concat( rpm );
-          resposta.concat( "," );
-        }
-        else if ( 0b00000010 & status )
-				{
-          resposta.concat( "\"rumo\":" );
-          resposta.concat( rumo );
           resposta.concat( "," );
         }
 

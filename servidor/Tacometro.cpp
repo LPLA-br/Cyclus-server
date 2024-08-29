@@ -1,8 +1,7 @@
 /******************************************************
  * Tacometro
- * LPLA-br 
- * Dependências:
- * https://github.com/ErickSimoes/Ultrasonic
+ * Biblioteca com funções associadas a aferição de
+ * velocidade.
  ******************************************************/
 
 #if ARDUINO >= 100
@@ -11,73 +10,43 @@
   #include <WProgram.h>
 #endif
 
-#include <cstdint>
 #include "Tacometro.hpp"
 
-//DEPENDÊNCIAS EXTERNAS:
-#include "Ultrasonic.h"
-
-#define MINUTO 60000 //ms
-
-Tacometro::Tacometro(
-    uint16_t diametroPneu, int16_t distanciaPulso,
-    const uint8_t gatilho, const uint8_t eco
-): tempoInicial(0), tempoFinal(1)
+/*Função bloqueante de medição de intervalo
+  entre dois pontos. retorna intervalo em
+  milisegundos.
+*/
+int medirTempoEntreDoisPulsos()
 {
-  this->ultrasonico = new Ultrasonic();
-  this->diametroPneu = diametroPneu;
-  this->distanciaPulso = distanciaPulso;
-}
-
-/* inicia leitura de tempo bloqueante */
-void Tacometro::ler( uint16_t* variavelAlvo )
-{
-  while( true )
+  static int inicio = millis();
+  while ( true )
   {
-    if( this->ultrasonico->obterDistanciaCM() <= this->distanciaPulso )
+    if ( digitalRead(LEITOR) == HIGH )
     {
-      continue;
+      return (millis() - inicio);
     }
-    else
-    {
-      *variavelAlvo = millis();
-      break;
-    }
+    else continue;
   }
 }
 
-/* encerra leitura de tempo bloqueante */
-void  Tacometro::lerFinal()
+/*Função para obteção de rotações por minuto.
+  Contém mecanismo para impedir divisão por zero*/
+float obterRpm( int duracaoRotacao )
 {
-  while( this->ultrasonico->obterDistanciaCM() > this->distanciaPulso )
+  if ( duracaoRotacao > 1 )
   {
-    continue;
+    return (MINUTO / duracaoRotacao);
   }
-  this->ler( &this->tempoFinal );
+  else return 0.1;
 }
 
-void Tacometro::obterTimestampsEntreDuasLeituras()
+/* Obtém velocidade em quilometros por hora a partir do:
+  perímetro externo do pneu e do rpm computado.
+ */
+float quilometroPorHora( const int PERIMETRO_CIRCULAR_PNEU, int rpm )
 {
-  if( this->ultrasonico->obterDistanciaCM() <= this->distanciaPulso )
-  {
-    this->ler( &this->tempoInicial );
-    this->lerFinal();
-  }
-}
-
-uint16_t Tacometro::obterRpm()
-{
-  this->obterTimestampsEntreDuasLeituras();
-  uint16_t duracaoRotacao = (this->tempoFinal - this->tempoInicial);
-  if ( duracaoRotacao != 0 )
-    return ( MINUTO / duracaoRotacao );
+  if ( rpm == 0.1 )
+    return 0.0;
   else
-    return 0;
+    return (((PERIMETRO_CIRCULAR_PNEU * rpm) * 60) / 1000);
 }
-
-uint16_t Tacometro::getLeituraMilisegundos()
-{
-  this->obterTimestampsEntreDuasLeituras();
-  return (this->tempoFinal - this->tempoInicial);
-}
-

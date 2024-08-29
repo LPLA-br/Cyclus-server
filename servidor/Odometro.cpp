@@ -1,10 +1,13 @@
+/*
+  Biblioteca para aferição de odometria.
+*/
 #include "Odometro.hpp"
 
-Odometro::Odometro(): metros(0)
-{}
-
-void Odometro::atualizar( float distanciaNaRotacao )
+/* Pega o valor de velocidade e o emprega para incrementar
+   variável global de ondometria.
+*/
+void incrementarDistancia( int velocidade, int* distancia )
 {
-  this->metros += distanciaNaRotacao;
+  *(distancia) += velocidade;
 }
 
