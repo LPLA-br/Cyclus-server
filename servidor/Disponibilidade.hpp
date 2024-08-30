@@ -1,0 +1,6 @@
+#ifndef DISPONIBILIDADE_HPP_INCLUDED
+#define DISPONIBILIDADE_HPP_INCLUDED
+
+void testarPulsosPeriodicosPorUmMinuto();
+
+#endif // DISPONIBILIDADE_HPP_INCLUDED

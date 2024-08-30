@@ -5,6 +5,6 @@
 
 void definirBit( uint8_t* alvo, uint8_t mascaraNegativa );
 void desdefinirBit( uint8_t* alvo, uint8_t mascaraPositiva );
-bool lerBit( uint8_t* alvo, uint8_t mascaraUmBitPositivo );
+uint8_t lerBit( uint8_t* alvo, uint8_t mascaraUmBitPositivo );
 
 #endif // BITS_HPP_INCLUDED

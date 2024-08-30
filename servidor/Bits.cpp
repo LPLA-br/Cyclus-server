@@ -1,7 +1,8 @@
 /*
 biblioteca simples para manipulação
 de bits em variáveis de oito bits.
-Útil para sistema de flags de um bit.
+Útil para sistema de flags de um bit
+em variáveis de oito bits.
 */
 #include "Bits.hpp"
 
@@ -19,14 +20,14 @@ void desdefinirBit( uint8_t* alvo, uint8_t mascaraPositiva )
 
 /*usa máscara com um bit positivo para ler valor daquele bit
 naquela posição.*/
-bool lerBit( uint8_t* alvo, uint8_t mascaraUmBitPositivo )
+uint8_t lerBit( uint8_t* alvo, uint8_t mascaraUmBitPositivo )
 {
-  if ( *(alvo) & mascaraUmBitPositivo == mascaraUmBitPositivo )
+  if ( (*(alvo) & mascaraUmBitPositivo) == mascaraUmBitPositivo )
   {
-    return true;
+    return 1;
   }
   else
   {
-    return false;
+    return 0;
   }
 }
