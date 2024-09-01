@@ -4,40 +4,44 @@
 
   Compilado na IDE arduino 1.8.19
 
-  Lista de Sensores#####################################################
-  HC-SR04 Sensor de distância ultra sônica (analógico) velocidade/odômetro
-  LDR 5mm Sensor de Luminosidade (analógico) velocidade/odômetro
-  HMC5883L Bússola Eletrônica sem fio (Comunicação serial I2C) rumo
+  Lista de Sensores #####################################################
+   HC-SR04 Sensor de distância ultra sônica (analógico) velocidade/odômetro
+   LDR 5mm Sensor de Luminosidade (analógico) velocidade/odômetro
+   HMC5883L Bússola Eletrônica sem fio (Comunicação serial I2C) rumo
   BMP 280 pressão e temperatura (I2C ou SPI) Altitude e condições ambientais
   MPU-6050 Acelerometro e Giroscópio (I2C) Atitude(aclives e declives)
 
 */
+
+// DEPENDÊNCIAS EXTERNAS
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
 
-//#include "./libs/Tacometro.hpp"
+// DEPENDÊNCIAS NATIVAS
+#include "Tacometro.hpp"
+#include "Odometro.hpp"
+#include "Bits.hpp"
+#include "Disponibilidade.hpp"
 
-//bluetooth
+//BLUETOOTH LE
 BLEServer* servidor = NULL;
 BLECharacteristic* caracteristica = NULL;
 
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
 
-//variáveis especificas do protocolo cycle
-uint16_t status = 0b00000000;
+//VARIÁVEIS ESPECIFICAS DO PROTOCOLO CYCLE
+uint8_t status = 0b00000000; //recursos
 uint16_t rpm = 0;
+uint16_t rumo = 0; // 0 até 360
 
 const uint8_t TAMANHO_MAX_MSG = 50;
-
-//Instânciação de bibliotecas dos sensores
 
 /*Gere UUID's em: https://www.uuidgenerator.net */
 #define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
-
 
 class MyServerCallbacks: public BLEServerCallbacks 
 {
@@ -55,6 +59,7 @@ class MyServerCallbacks: public BLEServerCallbacks
 void setup() 
 {
   Serial.begin(115200);
+  pinMode(LEITOR,INPUT); //reservado para aferição de RPM
 
   BLEDevice::init("ESP32");
 
@@ -81,30 +86,61 @@ void setup()
   anunciando->setMinPreferred(0x0);
   BLEDevice::startAdvertising();
   Serial.println("Aguardando cliente para notifica-lo periodicamente...");
+
+  /*EXECUÇÃO DE FUNÇÕES DE TESTE PARA DEFINIÇÃO DA
+    FLAGS DE DISPONIBILIDADE DE RECURSOS MODULARES*/
+  status = 0b00000001; //temporário
 }
 
 void loop() 
 {
     if (deviceConnected) 
     {
-        //notificacao periódica de dados
-        // {"stat":NNN,"rpm":NNNN}
-        char* resposta = new char[TAMANHO_MAX_MSG];
-        std::snprintf( resposta, TAMANHO_MAX_MSG, "{\"stat\":%i,\"rpm\":%i}", status, rpm );
+        Serial.println("device connected loop");
+        String resposta( "{" );
 
-        //caracteristica->setValue((uint8_t*)&value, 4);
-        caracteristica->setValue( (uint8_t*)resposta, TAMANHO_MAX_MSG );
-        caracteristica->notify();
-        rpm++;
-        delay(1);
-        delete resposta;
+        // Construção da resposta BLE
+        if ( millis() > 5000 )
+        {
+          /*gambiarra: aguardar 5 segundos
+          para que o BLE tenha
+          tempo de anunciar suas
+          características ao conectante*/
+
+          //condicional de disponibilidade do recurso.
+          if ( true )
+          {
+            int interval = medirTempoEntreDoisPulsos();
+            if ( interval > 10 )
+            {
+              rpm = interval;
+            }
+            resposta.concat( "\"rpm\":" );
+            resposta.concat( obterRpm(rpm) );
+            resposta.concat( "," ); 
+          }
+        }
+
+        resposta.concat("\"pog\":1}");
+        
+        if ( resposta.length() <= TAMANHO_MAX_MSG )
+        {
+          caracteristica->setValue( (uint8_t*)resposta.c_str(), TAMANHO_MAX_MSG );
+          caracteristica->notify();
+        }
+        else
+        {
+          caracteristica->setValue( (uint8_t*)"{\"stat\":120}", TAMANHO_MAX_MSG );
+          Serial.println("erro: mensagem maior que valor definido por macro TAMANHO_MAX_MSG !");
+          caracteristica->notify();
+        }
     }
 
     if (!deviceConnected && oldDeviceConnected) 
     {
         delay(500);
         servidor->startAdvertising();
-        Serial.println("Nao conexao. iniciando advertising");
+        Serial.println("desconectado. iniciando estado anunciante advertising");
         oldDeviceConnected = deviceConnected;
     }
 
