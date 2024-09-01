@@ -18,7 +18,7 @@
 */
 int medirTempoEntreDoisPulsos()
 {
-  static int inicio = millis();
+  int inicio = millis();
   while ( true )
   {
     if ( digitalRead(LEITOR) == HIGH )
@@ -30,10 +30,13 @@ int medirTempoEntreDoisPulsos()
 }
 
 /*Função para obteção de rotações por minuto.
-  Contém mecanismo para impedir divisão por zero*/
+  Contém mecanismo para impedir divisão por zero.
+  Servidor.ino deve impedir execução desta função
+  para duracaoRotacao < 10 evitando retorno 0.1
+*/
 float obterRpm( int duracaoRotacao )
 {
-  if ( duracaoRotacao > 1 )
+  if ( duracaoRotacao > 10 )
   {
     return (MINUTO / duracaoRotacao);
   }
@@ -42,6 +45,7 @@ float obterRpm( int duracaoRotacao )
 
 /* Obtém velocidade em quilometros por hora a partir do:
   perímetro externo do pneu e do rpm computado.
+  DESCARTADO: Aplicação front-end terá esta responsabilidade!
  */
 float quilometroPorHora( const int PERIMETRO_CIRCULAR_PNEU, int rpm )
 {

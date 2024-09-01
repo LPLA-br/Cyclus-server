@@ -59,6 +59,7 @@ class MyServerCallbacks: public BLEServerCallbacks
 void setup() 
 {
   Serial.begin(115200);
+  pinMode(LEITOR,INPUT); //reservado para aferição de RPM
 
   BLEDevice::init("ESP32");
 
@@ -88,30 +89,51 @@ void setup()
 
   /*EXECUÇÃO DE FUNÇÕES DE TESTE PARA DEFINIÇÃO DA
     FLAGS DE DISPONIBILIDADE DE RECURSOS MODULARES*/
-  status = 0b00000001;
-
+  status = 0b00000001; //temporário
 }
 
 void loop() 
 {
     if (deviceConnected) 
     {
-
+        Serial.println("device connected loop");
         String resposta( "{" );
 
         // Construção da resposta BLE
-        if ( 0b00000001 & status )
+        if ( millis() > 5000 )
         {
-          rpm = obterRpm(medirTempoEntreDoisPulsos());
-          resposta.concat( "\"rpm\":" );
-          resposta.concat( rpm );
-          resposta.concat( "," );
+          /*gambiarra: aguardar 5 segundos
+          para que o BLE tenha
+          tempo de anunciar suas
+          características ao conectante*/
+
+          //condicional de disponibilidade do recurso.
+          if ( true )
+          {
+            int interval = medirTempoEntreDoisPulsos();
+            if ( interval > 10 )
+            {
+              rpm = interval;
+            }
+            resposta.concat( "\"rpm\":" );
+            resposta.concat( obterRpm(rpm) );
+            resposta.concat( "," ); 
+          }
         }
 
         resposta.concat("\"pog\":1}");
         
-        caracteristica->setValue( (uint8_t*)resposta.c_str(), TAMANHO_MAX_MSG );
-        caracteristica->notify();
+        if ( resposta.length() <= TAMANHO_MAX_MSG )
+        {
+          caracteristica->setValue( (uint8_t*)resposta.c_str(), TAMANHO_MAX_MSG );
+          caracteristica->notify();
+        }
+        else
+        {
+          caracteristica->setValue( (uint8_t*)"{\"stat\":120}", TAMANHO_MAX_MSG );
+          Serial.println("erro: mensagem maior que valor definido por macro TAMANHO_MAX_MSG !");
+          caracteristica->notify();
+        }
     }
 
     if (!deviceConnected && oldDeviceConnected) 
