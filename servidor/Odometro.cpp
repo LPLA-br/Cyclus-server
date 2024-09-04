@@ -8,6 +8,6 @@
 */
 void incrementarDistancia( int velocidade, int* distancia )
 {
-  *(distancia) += velocidade;
+  //uninplemented.
 }
 
