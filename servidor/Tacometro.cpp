@@ -34,7 +34,7 @@ int medirTempoEntreDoisPulsos()
   Servidor.ino deve impedir execução desta função
   para duracaoRotacao < 10 evitando retorno 0.1
 */
-float obterRpm( int duracaoRotacao )
+int obterRpm( int duracaoRotacao )
 {
   if ( duracaoRotacao > 10 )
   {
