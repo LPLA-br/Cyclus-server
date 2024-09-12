@@ -34,10 +34,11 @@ bool oldDeviceConnected = false;
 
 //VARIÁVEIS ESPECIFICAS DO PROTOCOLO CYCLE
 uint8_t status = 0b00000000; //recursos
-uint16_t rpm = 0;
+uint16_t intervalo = 0;
+uint32_t contagemRotacoes = 0;
 uint16_t rumo = 0; // 0 até 360
 
-const uint8_t TAMANHO_MAX_MSG = 50;
+const uint8_t TAMANHO_MAX_MSG =37;
 
 /*Gere UUID's em: https://www.uuidgenerator.net */
 #define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
@@ -113,15 +114,18 @@ void loop()
             int interval = medirTempoEntreDoisPulsos();
             if ( interval > 10 )
             {
-              rpm = interval;
+              contagemRotacoes++;
+              intervalo = interval;
             }
-            resposta.concat( "\"rpm\":" );
-            resposta.concat( obterRpm(rpm) );
-            resposta.concat( "," ); 
+            resposta.concat( "i:" );
+            resposta.concat( intervalo );
+            resposta.concat( ",c:" ); 
+            resposta.concat( contagemRotacoes );
+            resposta.concat( "," );
           }
         }
 
-        resposta.concat("\"pog\":1}");
+        resposta.concat("s:2}");
         
         if ( resposta.length() <= TAMANHO_MAX_MSG )
         {
@@ -130,7 +134,7 @@ void loop()
         }
         else
         {
-          caracteristica->setValue( (uint8_t*)"{\"stat\":120}", TAMANHO_MAX_MSG );
+          caracteristica->setValue( (uint8_t*)"{s:120}", TAMANHO_MAX_MSG );
           Serial.println("erro: mensagem maior que valor definido por macro TAMANHO_MAX_MSG !");
           caracteristica->notify();
         }

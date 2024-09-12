@@ -6,7 +6,7 @@
 
 
 int medirTempoEntreDoisPulsos();
-float obterRpm( int duracaoRotacao );
+int obterRpm( int duracaoRotacao );
 float quilometroPorHora( const int PERIMETRO_CIRCULAR_PNEU, int rpm );
 
 #endif // TACOMETRO_HPP_INCLUDED
