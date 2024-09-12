@@ -1,33 +1,23 @@
 #include <cstdio>
 #include <chrono>
+//#include "./Tacometro.hpp" depende de: WProgram.h or Arduino.h
 
-#define MINUTO 600000
+#define MINUTO 60000
 #define PERIMETRO 2
 
 #define HIGH 1
 #define LOW  0
 
-/* teste unitário caixa preta:
- *    medirTempoEntreDoisPulsos();
- *
- * teste integracao caixa preta:
- * quilometroPorHora(2,obterRpm());
- * */
-
-
 //#################MOCKS
-//
 auto inicio = std::chrono::high_resolution_clock::now();
-
-clock_t millisegundoInicial = clock(); //inicio da execução do programa.
 
 bool fakePin = false;
 
-int8_t millis()
+int millis()
 {
-  auto tempoCorrente = std::chrono::high_resolution_clock::now();
-  auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(tempoCorrente - inicio);
-  return (elapsed.count());
+  auto agora = std::chrono::high_resolution_clock::now();
+  auto intervalo = std::chrono::duration_cast<std::chrono::milliseconds>(agora - inicio);
+  return (intervalo.count());
 }
 
 bool digitalRead( bool* fakePin )
@@ -38,17 +28,7 @@ bool digitalRead( bool* fakePin )
     return false;
 }
 //#################MOCKS
-
-//########## TRANSCRIÇÃO 3/9/2024 ##############
-// Tacometro.hpp
-
-float quilometroPorHora( const int PERIMETRO_CIRCULAR_PNEU, int rpm )
-{
-  if ( rpm == 0.1 )
-    return 0.0;
-  else
-    return (((PERIMETRO_CIRCULAR_PNEU * rpm) * 60) / 1000);
-}
+// TRANSCRIÇÃO 10/9/2024
 
 float obterRpm( int duracaoRotacao )
 {
@@ -59,22 +39,18 @@ float obterRpm( int duracaoRotacao )
   else return 0.1;
 }
 
-/* deve ser executada em thread paralela*/
-int medirTempoEntreDoisPulsos()
+/* Obtém velocidade em quilometros por hora a partir do:
+  perímetro externo do pneu e do rpm computado.
+  DESCARTADO: Aplicação front-end terá esta responsabilidade!
+ */
+float quilometroPorHora( const int PERIMETRO_CIRCULAR_PNEU, int rpm )
 {
-  int inicio = millis();
-  while ( true )
-  {
-    if ( digitalRead( &fakePin ) == HIGH )
-    {
-      return (millis() - inicio);
-    }
-    else continue;
-  }
+  if ( rpm == 0.1 )
+    return 0.0;
+  else
+    return (((PERIMETRO_CIRCULAR_PNEU * rpm) * 60) / 1000);
 }
-
-//########## TRANSCRIÇÃO ##############
-
+//
 
 void obterRpmTEST()
 {
@@ -93,15 +69,17 @@ void quilometroPorHoraTEST()
 
   int rpm = 60; //retorno fake de obterRpm();
   int perimetroPneu = 2; //metros
-  printf("rpm de %i e perimetroPneu de %i. retorno deve ser proximo de: %fm/m. resultou em: %fm/m\n",
-      rpm, perimetroPneu, 120.0, quilometroPorHora( perimetroPneu, rpm ));
+  printf("rpm de %i e perimetroPneu de %i. velocidade deve ser proximo de: %fkm/h. resultou em: %fk/m\n",
+      rpm, perimetroPneu, 7.0, quilometroPorHora( perimetroPneu, rpm ));
 
   printf("\n\n");
 }
 
 void medirTempoEntreDoisPulsosTEST()
 {
-
+  /*C++ -> threads são bloqueantes (wtf)
+    ¯\_(o_o)_/¯ automatizado -> manual
+  */
 }
 
 int main(int argc, char *argv[])

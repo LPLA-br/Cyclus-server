@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 /* teste unitário caixa preta da biblioteca de manipulação de bits */
-#include "../servidor/Bits.hpp"
+#include "./Bits.hpp"
 
 
 void lerBitTEST()
