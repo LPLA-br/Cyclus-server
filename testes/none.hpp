@@ -1,0 +1,4 @@
+#ifndef NONE_HPP_INCLUDED
+#define NONE_HPP_INCLUDED
+
+#endif // NONE_HPP_INCLUDED
